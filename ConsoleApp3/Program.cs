@@ -42,7 +42,7 @@ namespace ConsoleApp3
                 Field.BotAttack = FieldGenerate(Field.BotAttack);
                 DrawBorder();
                 DrawSea();
-                //ShipPlacer();
+                ShipPlacer();
                 Field.BotField = BotFieldGenerate(Field.BotField);
                 //Game();
                 game = Result(Game());
@@ -106,7 +106,22 @@ namespace ConsoleApp3
 
                 if (Field.BotAttack[AimX, AimY] == 0)
                 {
-                    CanPlace = true;
+                    if (Field.PlayerField[AimX, AimY] == 0)
+                    {
+                        if (rnd.Next(0, 4) == 0)
+                        {
+                            CanPlace = true;
+                        }
+                        else
+                        {
+                            CanPlace = false;
+                        }
+                        
+                    }
+                    else
+                    {
+                        CanPlace = true;
+                    }
                 }
                 else
                 {
@@ -268,11 +283,11 @@ namespace ConsoleApp3
                 {
                     if (End[i,j]==1)
                     {
-                        new Pixel(j, i, ShipCantPlaceColor).BorderDraw();
+                        new Pixel(j + 6, i + 3, ShipCantPlaceColor).BorderDraw();
                     }
                     else
                     {
-                        new Pixel(j, i, MissColor).MissDraw();
+                        new Pixel(j + 6, i + 3, MissColor).MissDraw();
                     }
                 }
             }
