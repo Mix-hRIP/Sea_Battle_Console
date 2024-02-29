@@ -22,33 +22,41 @@ namespace ConsoleApp3
         private const ConsoleColor ShipCanPlaceColor = ConsoleColor.Green;
         private const ConsoleColor ShipCantPlaceColor = ConsoleColor.Red;
         private const ConsoleColor ShipColor = ConsoleColor.Gray;
-        private const ConsoleColor HitColor = ConsoleColor.Yellow;
+        private const ConsoleColor HitColor = ConsoleColor.Red;
         private const ConsoleColor MissColor = ConsoleColor.Cyan;
 
         static void Main()
         {
-            SetWindowSize(ScreenWidth, ScreenHeight);
-            SetBufferSize(ScreenWidth, ScreenHeight);
-            CursorVisible = false;
-            Console.Title = "";
-            Field.PlayerField = FieldGenerate(Field.PlayerField);
-            Field.BotField = FieldGenerate(Field.BotField);
-            Field.PlayerAttack = FieldGenerate(Field.PlayerAttack);
-            Field.BotAttack = FieldGenerate(Field.BotAttack);
-            DrawBorder();
-            DrawSea();
-            ShipPlacer();
-            Field.BotField= BotFieldGenerate(Field.BotField);
-            Game();
+            Control();
+            ConsoleKey key = ReadKey(true).Key;
+            for (bool game = true ; game;)
+            {
+                Console.Clear();
+                SetWindowSize(ScreenWidth, ScreenHeight);
+                SetBufferSize(ScreenWidth, ScreenHeight);
+                CursorVisible = false;
+                Console.Title = "SeaBattle";
+                Field.PlayerField = FieldGenerate(Field.PlayerField);
+                Field.BotField = FieldGenerate(Field.BotField);
+                Field.PlayerAttack = FieldGenerate(Field.PlayerAttack);
+                Field.BotAttack = FieldGenerate(Field.BotAttack);
+                DrawBorder();
+                DrawSea();
+                //ShipPlacer();
+                Field.BotField = BotFieldGenerate(Field.BotField);
+                //Game();
+                game = Result(Game());
+            }
+            GameEnd();
             ReadKey();
         }
         static bool Game()
         {
             short PHP = 20, BotHP = 20;
-            bool PlayerShot = true, BotShot = true;
+            bool PlayerShot = true, BotShot = true, Rez = false;
             while (PHP > 0 && BotHP > 0)
             {
-                while (PlayerShot)
+                while (PlayerShot && PHP > 0 && BotHP > 0)
                 {
                     PlayerShot = Aim();
                     DrawSea();
@@ -60,7 +68,7 @@ namespace ConsoleApp3
                         BotHP--;
                     }
                 }
-                while (BotShot)
+                while (BotShot && PHP > 0 && BotHP > 0)
                 {
                     Thread.Sleep(500);
                     BotShot = BotAim();
@@ -76,14 +84,22 @@ namespace ConsoleApp3
                 PlayerShot = true;
                 BotShot = true;
             }
-            return true;
+            if (PHP > BotHP)
+            {
+                Rez = true;
+            }
+            else
+            {
+                Rez = false;
+            }
+            return Rez;
         }
         static bool BotAim()
         {
             Random rnd = new Random();
             bool Pl = true, CanPlace = false, Rez = false;
             int AimX = 0, AimY = 0;
-
+            var aim = new Aim(AimX + 2, AimY + 2, ShipCanPlaceColor);
             while (Pl)
             {
                 AimX = rnd.Next(0, 10); AimY = rnd.Next(0, 10);
@@ -98,6 +114,38 @@ namespace ConsoleApp3
                 }
                 if (CanPlace)
                 {
+                    for (int j = 0; j <= AimY; j++)
+                    {
+                        Thread.Sleep(100);
+                        DrawSea();
+                        DrawShip();
+                        DrawBotAttack();
+                        DrawAttack();
+                        if (Field.PlayerAttack[0, j] == 0)
+                        {
+                            aim = new Aim(2, j + 2, ShipCanPlaceColor);
+                        }
+                        else
+                        {
+                            aim = new Aim(2, j + 2, ShipCantPlaceColor);
+                        }
+                    }
+                    for (int i = 0; i <= AimX; i++)
+                    {
+                        Thread.Sleep(100);
+                        DrawSea();
+                        DrawShip();
+                        DrawBotAttack();
+                        DrawAttack();
+                        if (Field.PlayerAttack[i, AimY] == 0)
+                        {
+                            aim = new Aim(i + 2, AimY + 2, ShipCanPlaceColor);
+                        }
+                        else
+                        {
+                            aim = new Aim(i + 2, AimY + 2, ShipCantPlaceColor);
+                        }
+                    }
                     if (Field.PlayerField[AimX, AimY] > 0)
                     {
                         Rez = true;
@@ -111,7 +159,7 @@ namespace ConsoleApp3
                     Pl = false;
                 }
             }
-
+            
             return Rez;
         }
         static bool Aim()
@@ -176,6 +224,60 @@ namespace ConsoleApp3
 
             return Rez;
         }
+
+        static void Control()
+        {
+            Console.Write("\n\n\n   CONTROL / УПРАВЛЕНИЕ:\n\n       ╔═╗\n       ║↑║\n       ╚═╝\n\n   ╔═╗ ╔═╗ ╔═╗\n   ║←║ ║↓║ ║→║\n   ╚═╝ ╚═╝ ╚═╝\n\n   TURN THE SHIP / ПОВЕРНУТЬ КОРАБЛЬ:\n\n   ╔═════════╗\n   ║ SPACE   ║\n   ╚═════════╝\n\n   PLACE SHIP / УСТАНОВИТЬ КОРАБЛЬ:\n\n        ╔══╗\n     ╔══╝←┘║\n     ║ENTER║\n     ╚═════╝\n\n\n\n   РЕКОМЕНДУЕТСЯ:\n\n   УСТАНОВИТЕ В СВОЙСТВАХ КОНСОЛИ ШРИФТ: RASTER FONTS ( ТОЧЕЧНЫЕ ШРИФТЫ ).\n\n\n\n\n\n\n   PRESS ANY BUTTON / НАЖМИТЕ ЛЮБУЮ КНОПКУ ");
+        }
+
+        static bool Result(bool Rez)
+        {
+            Console.Clear();
+            
+            if (Rez)
+            {
+                Console.Write("\n\n\n   ╔╗╥ ╔╗╥ ╥╔╛╔╗ ╥ ╥╥╔╗╥\n   ╠╝║ ╠╣╚╦╝╠╡╠╝ ║╥║║║║║\n   ╨ ╚╛╜╙ ╨ ╚╕╠╕ ╚╩╝╨╨╚╝\n\n\n\n   ПРОДОЛЖИТЬ ? ( [Y] / [N] ):  ");
+            }
+            else
+            {
+                Console.Write("\n\n\n   ╔╗ ╔╗╒╦╕ ╥ ╥╥╔╗╥\n   ╠╩╗║║ ║  ║╥║║║║║\n   ╚═╝╚╝ ╨  ╚╩╝╨╨╚╝\n\n\n\n   ПРОДОЛЖИТЬ ? ( [Y] / [N] ):  ");
+            }
+            for (bool C = true; C;)
+            {
+                ConsoleKey key = ReadKey(true).Key;
+                switch (key)
+                {
+                    case ConsoleKey.Y: C = false; Rez = true; break;
+                    case ConsoleKey.Enter: C = false; Rez = true; break;
+                    case ConsoleKey.N: C = false; Rez = false; break;
+                    case ConsoleKey.Backspace: C = false; Rez = false; break;
+                    default: C = true; break;
+                }
+                
+            }
+            return Rez;
+        }
+
+        static void GameEnd()
+        { 
+            Console.Clear();
+            int[,] End = new int[7, 15] { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0 }, { 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0 }, { 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0 }, { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0 }, { 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    if (End[i,j]==1)
+                    {
+                        new Pixel(j, i, ShipCantPlaceColor).BorderDraw();
+                    }
+                    else
+                    {
+                        new Pixel(j, i, MissColor).MissDraw();
+                    }
+                }
+            }
+        }
+
         static void ShipPlacer()
         {
             ShipPlace(4);
